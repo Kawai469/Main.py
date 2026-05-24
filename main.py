@@ -56,11 +56,57 @@ intents.members = True
 
 client = commands.Bot(command_prefix='k!', intents=intents)
 
+class TraLoiModal(discord.ui.Modal, title="Trả lời câu hỏi"):
+    cau_tra_loi = discord.ui.TextInput(
+        label="Câu trả lời của bạn",
+        placeholder="Nhập nội dung...",
+        style=discord.TextStyle.paragraph,
+        required=True,
+        max_length=1000
+    )
+
+    async def on_submit(self, interaction: discord.Interaction):
+        log_channel = interaction.guild.get_channel(LOGTRL_ID)
+
+        embed = discord.Embed(
+            title="📩 Có câu trả lời mới",
+            description=self.cau_tra_loi.value,
+            color=discord.Color.green()
+        )
+        embed.add_field(
+            name="👤 Người trả lời",
+            value=interaction.user.mention,
+            inline=False
+        )
+        if log_channel:
+            await log_channel.send(embed=embed)
+        await interaction.response.send_message("Đã gửi câu trả lời", ephemeral=True)
+        await interaction.response.send_message(embed=embed)
+
+class TraLoiView(discord.ui.View):
+    @discord.ui.button(
+        label="Trả Lời",
+        style=discord.ButtonStyle.primary
+    )
+    async def traloi(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button
+    ):
+        await interaction.response.send_modal(
+            TraLoiModal()
+        )
+
 GUILD_ID = discord.Object(id=1459553409521684510)
 ALLOWED_ID = 1307657523926663189
 CHANNEL_ID = 1459553410381512776
 GAY_CHANNEL_ID = 1505579229985771651
 SHIP_CHANNEL_ID = 1503259441074798723
+LOGTRL_ID = 1508014060510380052
+NANA_ID = 1051002575270449233
+IZANA_ID = 1319625004328943677
+KAWAI_ID = 1307657523926663189
+KAWAI2_ID = 1499602905567596665
 
 @client.event
 async def on_ready():
@@ -120,6 +166,67 @@ async def on_message(message):
         else:
             await message.channel.send("❌ Không tìm thấy channel!")
 
+    elif message.content.startswith("!createchannel"):
+        args = message.content.split(" ", 1)
+        if len(args) < 2:
+            await message.channel.send("nhập tên channel")
+            return
+        name = args[1]
+        channel = await message.guild.create_text_channel(name)
+        await message.channel.send(f"đã tạo channel: {channel.mention}")
+
+    elif message.content.startswith("!deletechannel"):
+        if len(message.channel.mention) == 0:
+            await message.channel.send("hãy ping channel để xóa")
+            return
+        channel = message.channel_mentions[0]
+        await channel.delete()
+
+    elif message.content.startswith("!editchannel"):
+        args = message.content.split(" ")
+        if len(message.channel_mentions) ==0:
+            await message.channel.send("hãy ping channel")
+            return
+        if len(args) < 3:
+            await message.channel.send("nhập tên mới")
+            return
+        channel = message.channe._mentions[0]
+        new_name = args[-1]
+        await channel.edit(name=new_name)
+        await message.channel.send(f"đã đổi tên thành {new_name}")
+
+    elif message.content.startswith("!addrole"):
+        if len(message.mentions) == 0:
+            await message.channel("mention user")
+            return
+        member = message.mentions[0]
+        role = discord.utils.get(
+            message.guild.roles,
+            name="Member"
+        )
+        if role is None:
+            await message.channel.send("Không tìm thấy role")
+            return
+        await member.add_roles(role)
+        await message.channel.send(
+            f"đã add role {role.mention} cho {member.mention}"
+        )
+
+    elif message.content.startswith("!addrole"):
+        if len(message.mentions) == 0:
+            await message.channel("mention user")
+            return
+        member = message.mentions[0]
+        role = discord.utils.get(
+            message.guild.roles,
+            name="Member"
+        )
+        if role is None:
+            await message.channel.send("Không tìm thấy role")
+            return
+            await member.remove_roles(role)
+            await message.channel.send(f"Đã xoá role {role.mention} khỏi {member.mention}")
+
     elif message.content.lower().startswith("k!ship"):
         if message.channel.id != SHIP_CHANNEL_ID:
             await message.channel.send("Bạn chỉ thực hiện lệnh ở https://discord.com/channels/1459553409521684510/1503259441074798723", delete_after= 5)
@@ -130,7 +237,12 @@ async def on_message(message):
         user1 = message.mentions[0]
         user2 = message.mentions[1]
 
-        percent = random.randint(0, 100)
+        if (user1.id == NANA_ID and user2.id == IZANA_ID) or (user1.id == IZANA_ID and user2.id == NANA_ID):
+            percent = 100
+        elif (user1.id == KAWAI_ID and user2.id == KAWAI2_ID) or (user1.id == KAWAI2_ID and user2.id == KAWAI_ID):
+            percent = 1
+        else:
+            percent = random.randint(0, 100)
 
         avatar1 = requests.get(user1.display_avatar.url).content
         avatar2 = requests.get(user2.display_avatar.url).content
@@ -155,7 +267,7 @@ async def on_message(message):
         draw = ImageDraw.Draw(bg)
         # font
         try:
-            font = ImageFont.truetype("arial.ttf", 40)
+            font = ImageFont.truetype("fonts/Poppins-Bold.ttf", 40)
         except IOError:
             font = ImageFont.load_default()
 
@@ -375,18 +487,16 @@ Lần 4: Đuổi việc
         embed3.set_image(url="https://cdn.discordapp.com/attachments/1463886315186684117/1498604585185447946/5102ea84ec5e84d61fb24477a758a3fb.jpg?ex=69f1c3c7&is=69f07247&hm=a60f0216db9461d78f0b9a13df6dd3d5e62150a5f60353e2cdb3e73478040693&")
         await message.channel.send(embeds=[embed, embed2, embed3])
 
-    elif message.content == "!test":
-        embed1 = discord.Embed(
-            title="🔥 Embed 1",
-            description="Nội dung Embed 1",
+    elif message.content == "!cauhoi":
+        embed = discord.Embed(
+            title="Câu hỏi 1",
+            description="Yuzi Béo Không?",
             color=discord.Color.red()
         )
-        embed2 = discord.Embed(
-            title="💙 Embed 2",
-            description="Nội dung Embed 2",
-            color=discord.Color.blue()
+        await message.channel.send(
+            embed=embed,
+            view=TraLoiView()
         )
-        await message.channel.send(content="✅ Đây là message thường", embeds=[embed1, embed2])
 
     elif message.content.lower() == "k!rules":
         embed = discord.Embed(
@@ -588,7 +698,7 @@ Bạn có bằng chứng không?
 
     elif client.user.mentioned_in(message):
         await message.reply(
-            "https://cdn.discordapp.com/attachments/1463886315186684117/1498666060939923586/image0.gif?ex=69f1fd08&is=69f0ab88&hm=862cdd1b873858c51deafbd09c2bfb0add30851a8dc8a9cbded7c8754617ea48&"
+            "https://cdn.discordapp.com/attachments/1498885197192495208/1507593582641549363/image0.gif?ex=6a12776f&is=6a1125ef&hm=4f84997e94316f36d47fa2d8b89a833813fc9effb7396c8bd197eea27676b15d&"
         )
 
     await client.process_commands(message)
