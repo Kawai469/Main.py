@@ -17,7 +17,7 @@ def main():
 
     # Check if the script exists
     if not os.path.exists(script_to_watch):
-        print(f"❌ Error: {script_to_watch} not found!")
+        print(f"❌ Lỗi: {script_to_watch} không tìm thấy!")
         return
 
     # Get initial modification time
@@ -27,19 +27,19 @@ def main():
     def start_bot():
         nonlocal process
         if process:
-            print("🛑 Stopping current bot...")
+            print("🛑 Dừng Bot hiện tại...")
             process.terminate()
             process.wait()
 
-        print(f"🚀 Starting bot: {script_to_watch}")
+        print(f"🚀 Đang bắt đầu chạy bot: {script_to_watch}")
         process = subprocess.Popen([sys.executable, script_to_watch])
 
     # Start bot initially
     start_bot()
 
-    print(f"👀 Watching for changes in {script_to_watch}...")
-    print(f"🔄 Check interval: {check_interval} seconds")
-    print("💡 Press Ctrl+C to stop")
+    print(f"👀 Đang theo dõi các sự thay đổi của {script_to_watch}...")
+    print(f"🔄 Khoảng thời gian: {check_interval} giây")
+    print("💡 Ấn Ctrl + C để dừng")
 
     try:
         while True:
@@ -47,17 +47,17 @@ def main():
             current_mod_time = get_file_mod_time(script_to_watch)
 
             if current_mod_time > last_mod_time:
-                print(f"📝 File changed at {time.ctime(current_mod_time)}")
-                print("🔄 Restarting bot...")
+                print(f"📝 File đã thay đổi lúc {time.ctime(current_mod_time)}")
+                print("🔄 Đang reset Bot...")
                 start_bot()
                 last_mod_time = current_mod_time
 
     except KeyboardInterrupt:
-        print("\n🛑 Stopping watcher...")
+        print("\n🛑 Đã ngừng xem...")
         if process:
             process.terminate()
             process.wait()
-        print("👋 Goodbye!")
+        print("👋 Tạm Biệt!")
 
 if __name__ == "__main__":
     main()

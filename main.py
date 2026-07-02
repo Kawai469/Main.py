@@ -10,6 +10,10 @@ import base64
 import hashlib
 import requests 
 import io
+from datetime import datetime, timezone
+import re
+import asyncio
+import aiohttp
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -54,7 +58,8 @@ intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 
-client = commands.Bot(command_prefix='k!', intents=intents)
+client = commands.Bot(command_prefix=["k!","K!"], intents=intents, case_insensitive=True)
+client.load_extension("cogs.fun")
 
 class TraLoiModal(discord.ui.Modal, title="Trả lời câu hỏi"):
     cau_tra_loi = discord.ui.TextInput(
@@ -97,34 +102,41 @@ class TraLoiView(discord.ui.View):
             TraLoiModal()
         )
 
+# ===== ID ZONE =====
+
 GUILD_ID = discord.Object(id=1459553409521684510)
 ALLOWED_ID = 1307657523926663189
 CHANNEL_ID = 1459553410381512776
-GAY_CHANNEL_ID = 1505579229985771651
-SHIP_CHANNEL_ID = 1503259441074798723
 LOGTRL_ID = 1508014060510380052
-NANA_ID = 1051002575270449233
-IZANA_ID = 1319625004328943677
 KAWAI_ID = 1307657523926663189
 KAWAI2_ID = 1499602905567596665
+RULES_MESSAGE_ID = 1495053362553557077
+CARLBOT_ID = 235148962103951360
+
+# ===== LỆNH KHỞI ĐỘNG BOT =====
 
 @client.event
 async def on_ready():
-    print(f'Logged on as {client.user}!')
+    print(f'Đã đăng nhập vào {client.user}!')
     try:
         synced = await client.tree.sync(guild=GUILD_ID)
         print(f'Synced {len(synced)} command(s)')
     except Exception as e:
         print(f'Failed to sync commands: {e}')
-    auto_message.start()
+
 
 @client.event
 async def on_error(event, *args, **kwargs):
     import traceback
     print(f'Error in {event}: {traceback.format_exc()}')
 
+# ===== LỆNH CHẠY BOT =====
+
 @client.event
 async def on_message(message):
+
+    global RULES_MESSAGE_ID
+
     if message.author == client.user:
         return
 
@@ -153,10 +165,10 @@ async def on_message(message):
         if guild.icon:
             embed.set_thumbnail(url=guild.icon.url)
         await message.channel.send(embed=embed)
-
+    
     elif message.content.startswith("!chat2 "):
         if message.author.id != ALLOWED_ID:
-            await message.channel.id("Bạn không có quyền sử dụng lệnh này")
+            await message.channel.send("Bạn không có quyền sử dụng lệnh này")
             return
         content = message.content[7:]
         channel = client.get_channel(CHANNEL_ID)
@@ -165,6 +177,85 @@ async def on_message(message):
             await message.channel.send("✅ Đã gửi!")
         else:
             await message.channel.send("❌ Không tìm thấy channel!")
+
+    elif message.content.lower().startswith("!ktratnhan"):
+        if message.author.id != ALLOWED_ID:
+            await message.channel.send("Bạn không có quyền kiểm tra tin nhắn")
+            return
+        if len(message.mentions) == 0:
+            await message.channel.send(
+                "Hãy mention người cần kiểm tra."
+            )
+            return
+
+        member = message.mentions[0]
+
+        start_date = datetime(
+            2026, 5, 4,
+            tzinfo=timezone.utc
+        )
+
+        end_date = datetime(
+            2026, 5, 31, 23, 59, 59,
+            tzinfo=timezone.utc
+        )
+
+        count = 0
+        links = []
+
+        await message.channel.send(
+            "🔍 Đang quét lịch sử tin nhắn..."
+        )
+
+        for channel in message.guild.text_channels:
+
+            try:
+
+                async for msg in channel.history(
+                    limit=None,
+                    after=start_date,
+                    before=end_date
+                ):
+
+                    if msg.author.id == member.id:
+
+                        count += 1
+
+                        links.append(
+                            f"• {msg.jump_url}"
+                        )
+
+            except discord.Forbidden:
+                continue
+
+        embed = discord.Embed(
+            title="📊 Thống kê tin nhắn",
+            color=discord.Color.blue()
+        )
+
+        embed.add_field(
+            name="👤 Thành viên",
+            value=member.mention,
+            inline=False
+        )
+
+        embed.add_field(
+            name="💬 Số tin nhắn",
+            value=str(count),
+            inline=False
+        )
+
+        # Discord giới hạn 1024 ký tự mỗi field
+        if links:
+            embed.add_field(
+                name="🔗 Link tin nhắn",
+                value="\n".join(links[:20]),
+                inline=False
+            )
+
+        await message.channel.send(
+            embed=embed
+        )
 
     elif message.content.startswith("!createchannel"):
         args = message.content.split(" ", 1)
@@ -176,7 +267,7 @@ async def on_message(message):
         await message.channel.send(f"đã tạo channel: {channel.mention}")
 
     elif message.content.startswith("!deletechannel"):
-        if len(message.channel.mention) == 0:
+        if len(message.channel.mentions) == 0:
             await message.channel.send("hãy ping channel để xóa")
             return
         channel = message.channel_mentions[0]
@@ -190,14 +281,14 @@ async def on_message(message):
         if len(args) < 3:
             await message.channel.send("nhập tên mới")
             return
-        channel = message.channe._mentions[0]
+        channel = message.channel_mentions[0]
         new_name = args[-1]
         await channel.edit(name=new_name)
         await message.channel.send(f"đã đổi tên thành {new_name}")
 
     elif message.content.startswith("!addrole"):
         if len(message.mentions) == 0:
-            await message.channel("mention user")
+            await message.channel.send("mention user")
             return
         member = message.mentions[0]
         role = discord.utils.get(
@@ -214,7 +305,7 @@ async def on_message(message):
 
     elif message.content.startswith("!addrole"):
         if len(message.mentions) == 0:
-            await message.channel("mention user")
+            await message.channel.send("mention user")
             return
         member = message.mentions[0]
         role = discord.utils.get(
@@ -227,125 +318,51 @@ async def on_message(message):
             await member.remove_roles(role)
             await message.channel.send(f"Đã xoá role {role.mention} khỏi {member.mention}")
 
-    elif message.content.lower().startswith("k!ship"):
-        if message.channel.id != SHIP_CHANNEL_ID:
-            await message.channel.send("Bạn chỉ thực hiện lệnh ở https://discord.com/channels/1459553409521684510/1503259441074798723", delete_after= 5)
-            return
-        if len(message.mentions) < 2:
-            await message.channel.send("Cần ping 2 người")
-            return
-        user1 = message.mentions[0]
-        user2 = message.mentions[1]
-
-        if (user1.id == NANA_ID and user2.id == IZANA_ID) or (user1.id == IZANA_ID and user2.id == NANA_ID):
-            percent = 100
-        elif (user1.id == KAWAI_ID and user2.id == KAWAI2_ID) or (user1.id == KAWAI2_ID and user2.id == KAWAI_ID):
-            percent = 1
-        else:
-            percent = random.randint(0, 100)
-
-        avatar1 = requests.get(user1.display_avatar.url).content
-        avatar2 = requests.get(user2.display_avatar.url).content
-
-        avatar1 = Image.open(io.BytesIO(avatar1)).resize((200, 200)).convert("RGBA")
-        avatar2 = Image.open(io.BytesIO(avatar2)).resize((200, 200)).convert("RGBA")
-
-        mask = Image.new("L", (200, 200), 0)
-        draw_mask = ImageDraw.Draw(mask)
-        draw_mask.ellipse((0, 0, 200, 200), fill=255)
-
-        avatar1.putalpha(mask)
-        avatar2.putalpha(mask)
-
-        bg = Image.open("romantic-night-sky-5120x2880-25549.jpg").resize((700, 250))
-
-        #dán avt
-        bg.paste(avatar1, (30,25), avatar1)
-        bg.paste(avatar2, (470, 25), avatar2)
-
-        # vẽ chữ
-        draw = ImageDraw.Draw(bg)
-        # font
-        try:
-            font = ImageFont.truetype("fonts/Poppins-Bold.ttf", 40)
-        except IOError:
-            font = ImageFont.load_default()
-
-        # trái tim
-        heart = Image.open("heart.png.png").resize((80, 80))
-        bg.paste(heart, (310, 45), heart)
-
-        # phần trăm
-        draw.text((290, 140), f"{percent}%", fill="white", font=font)
-
-        # lưu ảnh
-        output = io.BytesIO()
-        bg.save(output, format="PNG")
-        output.seek(0)
-
-        file = discord.File(output, filename="ship.png")
-
-        embed=discord.Embed(title="💖 Ship Result", description=f"{user1.mention} ❤️ {user2.mention}\nĐộ hợp nhau: **{percent}%**", color=discord.Color(0xFCB2C5))
-        embed.set_image(url="attachment://ship.png")
-
-        await message.channel.send(embed=embed, file=file)
-
     elif message.content.lower() == "!webhook":
-        url = os.getenv("WEBHOOK_URL")
-        data = {"content": "https://discord.gg/HxPCChgAKw"}
-        await requests.post(url, json=data)
-        await message.channel.send("Đã gửi")
-
-    elif message.content.lower().startswith("k!gay"):
-        if message.channel.id != GAY_CHANNEL_ID:
-            await message.channel.send("Bạn chỉ thực hiện lệnh ở https://discord.com/channels/1459553409521684510/1505579229985771651", delete_after=5)
+        if message.author.id != ALLOWED_ID:
+            await message.channel.send("❌ Bạn không có quyền.")
             return
-        user_id = message.author.id
-        current_time = time.time()
-        if user_id in cooldowns:
-            remaining = cooldowns[user_id] - current_time
-            if remaining > 0:
-                timestamp = int(cooldowns[user_id])
-                await message.channel.send(f"⏳ Bạn cần chờ  <t:{timestamp}:R> giây!", delete_after=10)
-                return
 
-        cooldowns[user_id] = current_time + 10
-        if message.mentions:
-            member = message.mentions[0]
-        else:
-            member = message.author
+        url = os.getenv("WEBHOOK_URL")
 
-        percent = random.randint(0, 100)
-        if percent < 20:
-            result = "🗿 Quá thẳng luôn"
-        elif percent < 40:
-            result = "🙂 Có dấu hiệu nhẹ"
-        elif percent < 60:
-            result = "🤨 Đáng nghi lắm rồi"
-        elif percent < 80:
-            result = "😳 Gay khá rõ"
-        else:
-            result = "🏳️‍🌈 Siêu gay"
+        if not url:
+            await message.channel.send("❌ Chưa thiết lập WEBHOOK_URL.")
+            return
 
-        embed = discord.Embed(
-            title="🏳️‍🌈 Gay Detector",
-            description=(
-                f"{member.mention} gay **{percent}%**\n\n"
-                f"{result}"
-            ),
-            color=discord.Color.random()
-        )
-        await message.channel.send(embed=embed)
+        data = {
+            "content": "https://discord.gg/HxPCChgAKw"
+        }
+
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, json=data) as response:
+                if response.status == 204:
+                    await message.channel.send("✅ Đã gửi webhook!")
+                else:
+                    await message.channel.send(f"❌ Lỗi webhook ({response.status})")
 
     elif message.content.startswith("!dm"):
         if message.author.id != ALLOWED_ID:
-            await message.channel.send("Bạn không có quyền sử dụng lệnh này!")
+            await message.channel.send("❌ Bạn không có quyền sử dụng lệnh này!")
             return
-        if message.mentions:
-            member = message.mentions[0]
-            content = message.content.split(" ", 2)[2]
-        await member.send(content)
-        await message.channel.send("✅ Đã gửi DM!")
+
+        if not message.mentions:
+            await message.channel.send("❌ Vui lòng mention người cần gửi.")
+            return
+
+        args = message.content.split(" ", 2)
+
+        if len(args) < 3:
+            await message.channel.send("❌ Vui lòng nhập nội dung.")
+            return
+
+        member = message.mentions[0]
+        content = args[2]
+
+        try:
+            await member.send(content)
+            await message.channel.send(f"✅ Đã gửi DM cho **{member}**!")
+        except Exception:
+            await message.channel.send("❌ Không thể gửi DM cho người này.")
 
     elif message.content.startswith("!chat "):
         if message.author.id != ALLOWED_ID:
@@ -355,19 +372,7 @@ async def on_message(message):
         await message.delete()
         await message.channel.send(content)
 
-    elif message.content.lower().startswith("k!avatar"):
-        if message.mentions:
-            member = message.mentions[0]
-            
-        else:
-            member = message.author
-
-        embed = discord.Embed(
-            title=f"Avatar của {member.name}",
-            color=0x00ffcc
-        )
-        embed.set_image(url=member.display_avatar.url)
-        await message.channel.send(embed=embed)
+    # ===== EMBED ZONE =====
 
     elif message.content.lower() == "k!menu":
         embed = discord.Embed()
@@ -498,8 +503,24 @@ Lần 4: Đuổi việc
             view=TraLoiView()
         )
 
-    elif message.content.lower() == "k!rules":
-        embed = discord.Embed(
+    elif message.content == "!emoji":
+        embed = discord.Embed(title="Emoji Test", description="Testing custom emojis", color=discord.Color.purple())
+        embed.set_footer(text="<:Zero_Love:1490270183707644025>")
+        sent_message = await message.channel.send(embed=embed)
+        RULES_MESSAGE_ID = sent_message.id
+        await message.channel.send(embed=embed)
+
+    elif message.content == "!editrules":
+        if RULES_MESSAGE_ID is None:
+            await message.channel.send("Không thấy Rules Embed")
+            return
+        if message.author.id != ALLOWED_ID:
+            await message.channel.send("Bạn không có quyền")
+            return
+
+        old_message = await message.channel.fetch_message(RULES_MESSAGE_ID)
+            
+        new_embed = discord.Embed(
             title="『📃』ʟᴜậᴛˋˋᴛʀà",
             description="""1. Tôn Trọng Những Người Trong Tiệm
 2. Cấm Chửi Bới, Xúc Phạm, công kích cá nhân dưới mọi hình thức
@@ -511,8 +532,8 @@ Lần 4: Đuổi việc
 8. Xài Bot Đúng Nơi Quy Định""",
             color=discord.Color(0xFCB2C5)
         )
-        embed.set_image(url="https://cdn.discordapp.com/attachments/1463886315186684117/1494182901976141956/dcd78396326fab10cd9c7b5a3f1e75cf.jpg?ex=69e1adc4&is=69e05c44&hm=fe953a09415d90b08d07ffa527bec2db675721463ec1f4838a38b7cf6a946396&")
-        embed2 = discord.Embed(
+        new_embed.set_image(url="https://cdn.discordapp.com/attachments/1463886315186684117/1494182901976141956/dcd78396326fab10cd9c7b5a3f1e75cf.jpg?ex=69e1adc4&is=69e05c44&hm=fe953a09415d90b08d07ffa527bec2db675721463ec1f4838a38b7cf6a946396&")
+        new_embed2 = discord.Embed(
             description="""# Hình Phạt
 Vi phạm lần 1: Warn
 Vi phạm lần 2: Warn
@@ -539,13 +560,21 @@ Acc bị Hack, Scam: Ban Vĩnh Tiễn
 3. Nếu gặp các Manager Server vi phạm luật thì cứ báo cáo ở https://discord.com/channels/1459553409521684510/1463538921832059001 để được xử lí nhé!""",
             color=discord.Color(0xFCB2C5)
         )
-        embed2.set_footer(text="Chúc Bạn Có Thời Gian Vui Vẻ Nha! <3")
-        embed2.set_image(url="https://cdn.discordapp.com/attachments/1463886315186684117/1494186163488165919/eb667e1bf9915395a7847f5f5f1230ad.jpg?ex=69e1b0ce&is=69e05f4e&hm=7b1ca98122d541da3d33c02d8835de11d80844c0a2beda5c768c9dd7818f7048&")
-        await message.channel.send(content="Các bạn đọc luật để tránh bị Warn, Mute hoặc Ban nha<:Zero_Love:1490270183707644025>", embeds=[embed, embed2])
+        new_embed2.set_footer(text="Chúc Bạn Có Thời Gian Vui Vẻ Nha! <3")
+        new_embed2.set_image(url="https://cdn.discordapp.com/attachments/1463886315186684117/1494186163488165919/eb667e1bf9915395a7847f5f5f1230ad.jpg?ex=69e1b0ce&is=69e05f4e&hm=7b1ca98122d541da3d33c02d8835de11d80844c0a2beda5c768c9dd7818f7048&")
+        await old_message.edit(embed=new_embed)
+        await message.channel.send(content="Các bạn đọc luật để tránh bị Warn, Mute hoặc Ban nha<:Zero_Love:1490270183707644025>", embeds=[new_embed, new_embed2])
 
-    elif message.content == "!emoji":
-        embed = discord.Embed(title="Emoji Test", description="Testing custom emojis", color=discord.Color.purple())
-        embed.set_footer(text="<:Zero_Love:1490270183707644025>")
+    elif message.content == "!rulespartner":
+        embed = discord.Embed(title="Điều kiện Partner", description="""- Server có hoạt động thường xuyên (không dead)
+- Server phải 100 Member trở lên
+- Phải sử dụng Link Vĩnh Viễn
+- Server không có NSFW, Scam,... Những thứ vi phạm tiêu chuẩn cộng đồng
+- Trường hợp người đại diện out Server hoặc xóa bài thì Server tụi mình sẽ xóa theo
+
+**__Lưu Ý:__** Server trở về chỉ ping <@&1503409786085965974> để tránh gây phiền và ảnh hưởng Member""", color=discord.Color(0xFCB2C5))
+        embed.set_footer(text="Sửa đổi lần cuối 19/06/2026")
+        await message.delete()
         await message.channel.send(embed=embed)
 
     elif message.content == "!roleinfo":
@@ -702,6 +731,90 @@ Bạn có bằng chứng không?
         )
 
     await client.process_commands(message)
+
+# ===== SLASH COMMAND ZONE =====
+
+@client.tree.command(name="roleinfo", description="Xem thông tin role", guild=GUILD_ID)
+async def roleinfo(interaction: discord.Interaction, role: discord.Role):
+    await interaction.response.defer()
+
+    mentionable = "Có" if role.mentionable else "Không"
+    hoist = "Có" if role.hoist else "Không"
+
+    created = role.created_at
+    now = datetime.now(timezone.utc)
+
+    days = (now - created).days
+
+    permissions = [
+        perm.replace("_", " ").title()
+        for perm, value in role.permissions
+        if value
+    ]
+
+    permissions_text = (
+        "\n".join(f"• {p}" for p in permissions)
+        if permissions
+        else "Không có quyền nào"
+    )
+
+    embed = discord.Embed(
+        title=f"📜 Thông Tin Role: {role.name}",
+        color=role.color
+    )
+
+    embed.add_field(
+        name="🆔 ID",
+        value=role.id,
+        inline=True
+    )
+
+    embed.add_field(
+        name="👥 Thành viên",
+        value=len(role.members),
+        inline=True
+    )
+
+    embed.add_field(
+        name="📢 Cho phép mention",
+        value=mentionable,
+        inline=True
+    )
+
+    embed.add_field(
+        name="📌 Hiển thị riêng",
+        value=hoist,
+        inline=True
+    )
+
+    embed.add_field(
+        name="🎨 Màu",
+        value=str(role.color),
+        inline=True
+    )
+
+    embed.add_field(
+        name="🕒 Ngày tạo",
+        value=f"<t:{int(created.timestamp())}:F>",
+        inline=False
+    )
+
+    embed.add_field(
+        name="⏳ Đã tồn tại",
+        value=f"{days} ngày",
+        inline=False
+    )
+
+    embed.add_field(
+        name="🔐 Quyền",
+        value=permissions_text[:1024],
+        inline=False
+    )
+
+    if role.display_icon:
+        embed.set_thumbnail(url=role.display_icon.url)
+
+    await interaction.followup.send(embed=embed)
 
 @client.tree.command(name="rules", description="Xem Luật Server", guild=GUILD_ID)
 async def rules(interaction: discord.Interaction):
@@ -948,16 +1061,13 @@ async def serverinfo(interaction: discord.Interaction):
         embed.set_thumbnail(url=guild.icon.url)
     await interaction.followup.send(embed=embed)
 
-@tasks.loop(hours=1)
-async def auto_message():
-    channel = client.get_channel(CHANNEL_ID)
+async def main():
+    async with client:
+        for file in os.listdir("./cogs"):
+            if file.endswith(".py"):
+                await client.load_extension(f"cogs.{file[:-3]}")
 
-    timestamp = int(time.time())
-
-    if channel:
-        await channel.send(
-            "https://discord.gg/HxPCChgAKw"
-        )
+        await client.start(TOKEN)
 
 # ===== TOKEN LOADING =====
 def get_discord_token():
@@ -980,4 +1090,4 @@ def get_discord_token():
 TOKEN = get_discord_token()
 
 keep_alive.keep_alive()
-client.run(TOKEN)
+asyncio.run(main())

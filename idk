@@ -1,0 +1,12 @@
+    elif message.author.id != ALLOWED_ID:
+        return
+    match = re.fullmatch(
+        r'print\("(.+)"\)',
+        message.content
+    )
+    if match:
+
+        output = match.group(1)
+
+        await message.delete()
+        await message.channel.send(output)
