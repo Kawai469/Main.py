@@ -243,7 +243,7 @@ Acc bị Hack, Scam: Ban Vĩnh Tiễn
 2. Những trường hợp nặng dù không được nêu rõ trong luật vẫn xử lí nghêm khắc
 3. Luật có thể thay đổi bất cứ lúc nào
 4. Mod x2 warn
-4. Nếu gặp các Manager Server vi phạm luật thì cứ báo cáo ở https://discord.com/channels/1459553409521684510/1463538921832059001 để được xử lí nhé!''',
+5. Nếu gặp các Manager Server vi phạm luật thì cứ báo cáo ở https://discord.com/channels/1459553409521684510/1463538921832059001 để được xử lí nhé!''',
             color=discord.Color(0xFCB2C5)
         )
         embed2.set_footer(text="Chúc Bạn Có Thời Gian Vui Vẻ Nha! <3")
