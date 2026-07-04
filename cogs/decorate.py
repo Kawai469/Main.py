@@ -201,39 +201,49 @@ https://discord.com/channels/1459553409521684510/1459770418410950770
     async def rules(self, ctx:commands.Context):
         embed = discord.Embed(
             title="ʟᴜậᴛˋˋᴛʀà",
-            description="""1. Tôn Trọng Những Người Trong Tiệm
-2. Cấm Chửi Bới, Xúc Phạm, công kích cá nhân dưới mọi hình thức
-3. Cấm Gửi Nội Dung 18+, Phản Cảm, Bạo Lực, Nhạy Cảm, Nsfw Và Gore
-4. Cấm Quảng Cáo, Gửi Link Server Khác Khi Chưa Được Phép (Trừ Partners)
-5. Cấm Spam Dưới Mọi Hình Thức
-6. Cấm Leak Thông Tin Cá Nhân Người Khác
-7. Chat Đúng Chủ Đề của Từng Kênh
-8. Xài Bot Đúng Nơi Quy Định""",
+            description='''1. Tôn trọng tất cả thành viên, không xúc phạm, quấy rối hoặc gây mâu thuẫn.
+
+2. Không spam tin nhắn, emoji, sticker, hình ảnh, GIF...
+
+3. Không quảng cáo Server, website, sản phẩm hoặc mạng xã hội nếu chưa được <@&1459554666458386718> cho phép.
+
+4. Không gửi nội dung phản cảm, NSFW, bạo lực hoặc vi phạm Điều khoản dịch vụ của Discord.
+
+5. Không mạo danh người khác, Mod/Admin/Owner hoặc sử dụng tên/avatar nhằm lừa đảo.
+
+6. Không phát tán link độc hại, lừa đảo, virus hoặc các nội dung gây nguy hiểm.
+
+7. Sử dụng đúng kênh chat và đúng mục đích của từng kênh.
+
+8. Khi cần hỗ trợ, hãy tạo Ticket và chọn đúng danh mục. Không spam hoặc tạo nhiều Ticket cùng lúc.
+
+9. Tuân theo hướng dẫn của Mod/Admin/Owner. Nếu không đồng ý với quyết định, hãy bình tĩnh trao đổi qua Ticket.
+
+10. Ban Quản Trị có quyền chỉnh sửa luật và đưa ra quyết định cuối cùng nhằm đảm bảo môi trường thân thiện, công bằng và an toàn cho mọi thành viên.''',
             color=discord.Color(0xFCB2C5)
         )
         embed.set_image(url="https://cdn.discordapp.com/attachments/1463886315186684117/1494182901976141956/dcd78396326fab10cd9c7b5a3f1e75cf.jpg?ex=69e1adc4&is=69e05c44&hm=fe953a09415d90b08d07ffa527bec2db675721463ec1f4838a38b7cf6a946396&")
         embed2 = discord.Embed(
-            description="""# Hình Phạt
+            description='''# Hình Phạt
 Vi phạm lần 1: Warn
-Vi phạm lần 2: Warn
-Vi phạm lần 3: Warn
-Vi phạm lần 4: Mute 1 Ngày
-Vi phạm lần 5: Mute 3 Ngày
-Vi phạm lần 6: Mute 7 Ngày
-Vi phạm lần 7: Mute 14 Ngày
-Vi phạm lần 8: Ban Vĩnh Viễn
+Vi phạm lần 2: Mute 1 Ngày
+Vi phạm lần 3: Mute 3 Ngày
+Vi phạm lần 4: Mute 7 Ngày
+Vi phạm lần 5: Mute 14 Ngày
+Vi phạm lần 6: Ban Vĩnh Viễn
 
 # Trường Hợp Xử Lí Đặc Biệt
 
 Đăng vid, hình ảnh mang tính chất Chính Trị, Gây Hại, Low Nsfw, Low Gore: Mute 14 Ngày
 Đăng vid, hình ảnh mang tính chất Nsfw, Gore: ban vĩnh viễn
 Leak thông tin cá nhân: Ban Vĩnh Viễn
-Sử dụng acc Clone để tránh Mute, Ban,...: Ban Vĩnh Viễn (  cả chính và Clone)
+Sử dụng acc Clone để tránh Mute, Ban,...: Ban Vĩnh Viễn ( cả chính và Clone)
 Acc bị Hack, Scam: Ban Vĩnh Tiễn
 **__Lưu Ý__**: 1. <@1307657523926663189> Là **Luật**
 2. Những trường hợp nặng dù không được nêu rõ trong luật vẫn xử lí nghêm khắc
 3. Luật có thể thay đổi bất cứ lúc nào
-4. Nếu gặp các Manager Server vi phạm luật thì cứ báo cáo ở https://discord.com/channels/1459553409521684510/1463538921832059001 để được xử lí nhé!""",
+4. Mod x2 warn
+4. Nếu gặp các Manager Server vi phạm luật thì cứ báo cáo ở https://discord.com/channels/1459553409521684510/1463538921832059001 để được xử lí nhé!''',
             color=discord.Color(0xFCB2C5)
         )
         embed2.set_footer(text="Chúc Bạn Có Thời Gian Vui Vẻ Nha! <3")
