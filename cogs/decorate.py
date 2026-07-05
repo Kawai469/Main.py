@@ -197,8 +197,8 @@ https://discord.com/channels/1459553409521684510/1459770418410950770
         await ctx.delete()
         await ctx.send(embed=embed)
 
-    @commands.command(name="rules")
-    async def rules(self, ctx:commands.Context):
+    @commands.command(name="rule")
+    async def rule(self, ctx:commands.Context):
         embed = discord.Embed(
             title="ʟᴜậᴛˋˋᴛʀà",
             description='''1. Tôn trọng tất cả thành viên, không xúc phạm, quấy rối hoặc gây mâu thuẫn.
