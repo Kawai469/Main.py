@@ -17,6 +17,8 @@ import aiohttp
 
 from PIL import Image, ImageDraw, ImageFont
 
+from auto_reload import AutoReloader
+
 load_dotenv()
 
 # ===== ENCRYPTION SYSTEM =====
@@ -816,55 +818,7 @@ async def roleinfo(interaction: discord.Interaction, role: discord.Role):
 
     await interaction.followup.send(embed=embed)
 
-@client.tree.command(name="rules", description="Xem Luật Server", guild=GUILD_ID)
-async def rules(interaction: discord.Interaction):
-    await interaction.response.defer()
-    embed = discord.Embed(
-        title="『📃』ʟᴜậᴛˋˋᴛʀà",
-        description="""1. Tôn Trọng Những Người Trong Tiệm
-2. Cấm Chửi Bới, Xúc Phạm, công kích cá nhân dưới mọi hình thức
-3. Cấm Gửi Nội Dung 18+, Phản Cảm, Bạo Lực, Nhạy Cảm, Nsfw Và Gore
-4. Cấm Quảng Cáo, Gửi Link Server Khác Khi Chưa Được Phép (Trừ Partners)
-5. Cấm Spam Dưới Mọi Hình Thức
-6. Cấm Leak Thông Tin Cá Nhân Người Khác
-7. Chat Đúng Chủ Đề của Từng Kênh
-8. Xài Bot Đúng Nơi Quy Định""",
-            color=discord.Color(0xFCB2C5)
-        )
-    embed.set_image(url="https://cdn.discordapp.com/attachments/1463886315186684117/1494182901976141956/dcd78396326fab10cd9c7b5a3f1e75cf.jpg?ex=69e1adc4&is=69e05c44&hm=fe953a09415d90b08d07ffa527bec2db675721463ec1f4838a38b7cf6a946396&")
-    embed2 = discord.Embed(
-        description="""# Hình Phạt
-Vi phạm lần 1: Warn
-Vi phạm lần 2: Warn
-Vi phạm lần 3: Warn
-Vi phạm lần 4: Mute 1 Ngày
-Vi phạm lần 5: Mute 3 Ngày
-Vi phạm lần 6: Mute 7 Ngày
-Vi phạm lần 7: Mute 14 Ngày
-Vi phạm lần 8: Ban 1 Ngày
-Vi phạm lần 9: Ban 3 Ngày
-Vi phạm lần 10: Ban 7 Ngày
-Vi phạm lần 11: Ban 14 Ngày
-Vi phạm lần 12: Ban Vĩnh Viễn
-
-# Trường Hợp Xử Lí Đặc Biệt
-
-Đăng vid, hình ảnh mang tính chất Chính Trị, Gây Hại, Low Nsfw, Low Gore: Mute 14 Ngày
-Đăng vid, hình ảnh mang tính chất Nsfw, Gore: ban vĩnh viễn
-Leak thông tin cá nhân: Ban Vĩnh Viễn
-Sử dụng acc Clone để tránh Mute, Ban,...: Ban Vĩnh Viễn (  cả chính và Clone)
-Acc bị Hack, Scam: Ban Vĩnh Tiễn
-**__Lưu Ý__**: 1. Những trường hợp nặng dù không được nêu rõ trong luật vẫn xử lí nghêm khắc
-2. Luật có thể thay đổi bất cứ lúc nào
-3. Nếu gặp các Manager Server vi phạm luật thì cứ báo cáo ở https://discord.com/channels/1459553409521684510/1463538921832059001 để được xử lí nhé!""",
-            color=discord.Color(0xFCB2C5)
-        )
-    embed2.set_footer(text="Chúc Bạn Có Thời Gian Vui Vẻ Nha! <3")
-    embed2.set_image(url="https://cdn.discordapp.com/attachments/1463886315186684117/1494186163488165919/eb667e1bf9915395a7847f5f5f1230ad.jpg?ex=69e1b0ce&is=69e05f4e&hm=7b1ca98122d541da3d33c02d8835de11d80844c0a2beda5c768c9dd7818f7048&")
-    await interaction.followup.send(
-        content="Các bạn đọc luật để tránh bị Warn, Mute hoặc Ban nha<:Zero_Love:1490270183707644025>",
-        embeds=[embed, embed2]
-    )
+# Rules command is handled by the decorate cog so reloads apply correctly.
 
 @client.tree.command(name="menu", description="Xem Menu Trà Quán", guild=GUILD_ID)
 async def menu(interaction: discord.Interaction):
@@ -1066,6 +1020,10 @@ async def main():
         for file in os.listdir("./cogs"):
             if file.endswith(".py"):
                 await client.load_extension(f"cogs.{file[:-3]}")
+
+        reloader = AutoReloader(client, "./cogs")
+        reloader._last_mtimes = reloader._get_mtimes()
+        asyncio.create_task(reloader.run())
 
         await client.start(TOKEN)
 
